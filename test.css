@@ -1,7 +1,8 @@
-/* --- Anchor Tabs: crossfade + auto-height --- */
+
 .anchor--tabs {
   position: relative;
-  transition: height 0.35s ease; /* smooth height change when content differs */
+  overflow: hidden;
+  transition: height 0.4s ease; /* smooth height change when content differs */
 }
 
 /* all panels are stacked; only the active one is visible */
@@ -22,28 +23,21 @@
   pointer-events: auto;
 }
 
-/* optional: style the active trigger */
+/* optional: style the active trigger (must NOT be empty to avoid css(emptyRules)) */
 .anchor-link.is-active {
-  /* example: */
-  /* color: #ff6a00; */
-}
-
-.anchor--tabs {
-  transition: height 0.4s ease;
-  overflow: hidden;
+  color: #ff6a00; /* change or remove if you don't want styling */
 }
 
 /* accessibility: respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .anchor--tabs {
-    transition: none;
-  }
+  .anchor--tabs,
   .anchor--tabs .anchor--tab {
     transition: none;
   }
 }
 
-.body
-{
-	overflow-x:visible !important;
- }
+/* overflow-x fix */
+body {
+  overflow-x: visible !important;
+}
+
