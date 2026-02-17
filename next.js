@@ -1,28 +1,32 @@
+
 (() => {
-  // ---------------------------
-  // Helpers
-  // ---------------------------
   const onReady = (cb) => {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", cb);
     else cb();
   };
 
   // ---------------------------
-  // 1) POWER TABS (scoped per .power-container, excluding hardware engineered)
+  // 1) POWER TABS (scoped per .section-hardware-power, excluding engineered)
   // ---------------------------
   function initPowerTabsGlobal($) {
-    const $containers = $(".power-container").filter(function () {
+    const $sections = $(".section-hardware-power").filter(function () {
       return !$(this).closest(".section-hardware-engineered").length;
     });
-    if (!$containers.length) return;
+    if (!$sections.length) return;
 
-    $containers.each(function () {
-      const $container = $(this);
+    $sections.each(function () {
+      const $section = $(this);
 
-      // IMPORTANT: scope everything to THIS container
+      const $container = $section.find(".power-container").first();
       const $tabs = $container.find(".power-tab");
-      const $states = $container.find(".power-state");
-      if (!$tabs.length || !$states.length) return;
+
+      // States are in .power-parent (NOT inside power-container)
+      const $statesWrap = $section.find(".power-parent").first();
+      const $states = $statesWrap.find(".power-state");
+      const $state1 = $statesWrap.find(".power-state.is-1");
+      const $state2 = $statesWrap.find(".power-state.is-2");
+
+      if (!$container.length || !$tabs.length || !$states.length) return;
 
       const firstKey = $tabs.filter("#tab-1").length
         ? "tab-1"
@@ -31,7 +35,7 @@
       let lastClickedKey = firstKey;
       let hoverRevertTimer = null;
 
-      // Preload images in THIS container only
+      // Preload images in states (avoid flash)
       $states.find("img, source").each(function () {
         const el = this;
         const src = el.currentSrc || el.src || el.getAttribute("srcset");
@@ -42,11 +46,7 @@
         i.src = url;
       });
 
-      const $state1 = $container.find(".power-state.is-1");
-      const $state2 = $container.find(".power-state.is-2");
-
       function getTabByKey(key) {
-        // strict scope: only inside this container
         try {
           return $tabs.filter("#" + CSS.escape(key)).first();
         } catch (e) {
@@ -57,12 +57,12 @@
       function showStateByKey(key) {
         if (!getTabByKey(key).length) key = firstKey;
 
-        // Tabs UI (scoped)
-        $container.find(".power-tab, .power-title, .power-text").removeClass("active");
+        // Tabs UI (scoped to section)
+        $section.find(".power-tab, .power-title, .power-text").removeClass("active");
         const $activeTab = getTabByKey(key).addClass("active");
         $activeTab.find(".power-title, .power-text").addClass("active");
 
-        // Visuals (scoped)
+        // Visuals (scoped to states wrap)
         $states.stop(true, true).hide();
         if (key === "tab-1") $state1.stop(true, true).fadeIn(180);
         else $state2.stop(true, true).fadeIn(180);
@@ -82,7 +82,7 @@
         showStateByKey(this.id || firstKey);
       });
 
-      // When leaving THIS container (tabbing out), revert
+      // When leaving the tabs container (tabbing out)
       $container.off(".tabsGlobalOut").on("focusout.tabsGlobalOut", function (e) {
         if (!$container[0].contains(e.relatedTarget)) {
           clearTimeout(hoverRevertTimer);
@@ -90,7 +90,7 @@
         }
       });
 
-      // Hover desktop only (and reacts to resize)
+      // Hover desktop only, responsive to breakpoint changes
       function bindHover(enable) {
         if (enable) {
           $tabs.off(".tabsGlobalHover").on("mouseenter.tabsGlobalHover", function () {
@@ -254,7 +254,7 @@
   }
 
   // ---------------------------
-  // 4) FAQ A11Y
+  // 4) FAQ A11Y (jQuery)
   // ---------------------------
   function initFaqA11y($) {
     const $items = $(".faq-container_item");
@@ -283,7 +283,7 @@
   }
 
   // ---------------------------
-  // 5) HARDWARE ENGINEERED (isolated tabs only) — as-is
+  // 5) HARDWARE ENGINEERED (isolated tabs only) — unchanged
   // ---------------------------
   function initHardwareEngineeredTabs($) {
     const $sections = $(".section-hardware-engineered");
@@ -369,175 +369,6 @@
   }
 
   // ---------------------------
-  // 6) HARDWARE VIDEO — keep ONE script only (muted autoplay + mute/unmute)
-  // ---------------------------
-  function initHardwareVideos($) {
-    const $wraps = $(".hardware-video_wrapper");
-    if (!$wraps.length) return;
-
-    $wraps.each(function (i) {
-      const tag = `nv-video[${i + 1}]`;
-      const $wrap = $(this);
-      const $video = $wrap.find("video.nv-video");
-      if (!$video.length) return;
-
-      const video = $video[0];
-      const $btn = $wrap.find(".controls-square");
-
-      const $playUI = $wrap.find(".play-video, .play-text");
-      const $pauseUI = $wrap.find(".pause-video, .pause-text");
-      const $playText = $wrap.find(".play-text");
-      const $pauseText = $wrap.find(".pause-text");
-      const $playIcon = $wrap.find(".play-video");
-      const $pauseIcon = $wrap.find(".pause-video");
-
-      video.setAttribute("playsinline", "");
-      video.setAttribute("webkit-playsinline", "");
-      video.autoplay = false;
-
-      // Start muted
-      video.muted = true;
-      video.setAttribute("muted", "");
-
-      let userRequestedUnmute = false;
-
-      $playText.text("Unmute");
-      $pauseText.text("Mute");
-
-      try {
-        $playIcon.html(
-          '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">' +
-            '<path d="M4 10h3l5-4v12l-5-4H4z" fill="currentColor"></path>' +
-            '<path d="M16 9c1 .8 1.5 1.8 1.5 3s-.5 2.2-1.5 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
-            '<path d="M18.5 7c2 1.7 3 3.8 3 6s-1 4.3-3 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
-          "</svg>"
-        );
-        $pauseIcon.html(
-          '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">' +
-            '<path d="M4 10h3l5-4v12l-5-4H4z" fill="currentColor"></path>' +
-            '<path d="M16 8l6 6M22 8l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
-          "</svg>"
-        );
-      } catch (e) {}
-
-      function setPlayStateUI(playing) {
-        if (playing) $wrap.addClass("is-playing").removeClass("is-paused");
-        else $wrap.removeClass("is-playing").addClass("is-paused");
-      }
-
-      function updateMuteUI(isMuted) {
-        if (isMuted) {
-          $pauseUI.hide();
-          $playUI.css("display", "flex").show();
-          $btn.attr("aria-label", "Unmute").attr("title", "Unmute");
-        } else {
-          $playUI.hide();
-          $pauseUI.css("display", "flex").show();
-          $btn.attr("aria-label", "Mute").attr("title", "Mute");
-        }
-      }
-
-      video.addEventListener("volumechange", () => {
-        console.log(`[NV] ${tag} volumechange → muted:`, video.muted);
-        updateMuteUI(video.muted);
-      });
-
-      $btn.off(`click.nvMute${i}`).on(`click.nvMute${i}`, function () {
-        try {
-          video.muted = !video.muted;
-
-          if (video.muted) {
-            video.setAttribute("muted", "");
-            userRequestedUnmute = false;
-            console.log(`[NV] ${tag} MUTE (user)`);
-          } else {
-            video.removeAttribute("muted");
-            userRequestedUnmute = true;
-            console.log(`[NV] ${tag} UNMUTE (user)`);
-          }
-
-          updateMuteUI(video.muted);
-          if (video.paused) video.play().catch(() => {});
-        } catch (e) {
-          console.warn(`[NV] ${tag} mute/unmute error`, e);
-        }
-      });
-
-      video.addEventListener("play", () => setPlayStateUI(true));
-      video.addEventListener("pause", () => setPlayStateUI(false));
-      video.addEventListener("ended", () => setPlayStateUI(false));
-
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden && !video.paused) video.pause();
-      });
-
-      const tryPlayWithSound = async () => {
-        video.muted = false;
-        video.removeAttribute("muted");
-        try {
-          await video.play();
-          console.log(`[NV] ${tag} play with sound`);
-          return true;
-        } catch (e) {
-          console.warn(`[NV] ${tag} play with sound blocked`, e);
-          return false;
-        }
-      };
-
-      const tryPlayMuted = async () => {
-        video.muted = true;
-        video.setAttribute("muted", "");
-        try {
-          await video.play();
-          console.log(`[NV] ${tag} autoplay muted`);
-          return true;
-        } catch (e) {
-          console.warn(`[NV] ${tag} muted play failed`, e);
-          return false;
-        }
-      };
-
-      let firstAutoplayDone = false;
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(async (entry) => {
-            if (entry.isIntersecting) {
-              await new Promise((r) => setTimeout(r, 50));
-
-              if (!firstAutoplayDone) {
-                await tryPlayMuted();
-                firstAutoplayDone = true;
-                updateMuteUI(video.muted);
-                return;
-              }
-
-              if (userRequestedUnmute) {
-                const ok = await tryPlayWithSound();
-                if (!ok) await tryPlayMuted();
-              } else {
-                await tryPlayMuted();
-              }
-
-              updateMuteUI(video.muted);
-            } else {
-              if (!video.paused) {
-                video.pause();
-                console.log(`[NV] ${tag} pause (out of view)`);
-              }
-            }
-          });
-        },
-        { threshold: 0.25 }
-      );
-
-      io.observe($wrap[0]);
-
-      setPlayStateUI(false);
-      updateMuteUI(video.muted);
-    });
-  }
-
-  // ---------------------------
   // Boot
   // ---------------------------
   onReady(() => {
@@ -548,7 +379,6 @@
       initPowerTabsGlobal($);
       initFaqA11y($);
       initHardwareEngineeredTabs($);
-      initHardwareVideos($);
     }
 
     initMarketTabsTimer();
