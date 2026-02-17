@@ -1,3 +1,4 @@
+
 (() => {
   // ---------------------------
   // Helpers
@@ -8,7 +9,7 @@
   };
 
   // ---------------------------
-  // 1) POWER TABS (global, excluding .section-hardware-engineered)
+  // 1) POWER TABS (global, excluding .section-hardware-engineered) — FIXED
   // ---------------------------
   function initPowerTabsGlobal($) {
     const $containers = $(".power-container").filter(function () {
@@ -22,8 +23,11 @@
       const $states = $container.find(".power-state");
       if (!$tabs.length || !$states.length) return;
 
-      const firstId = $tabs.filter("#tab-1").length ? "#tab-1" : "#" + ($tabs.first().attr("id") || "");
-      let lastClickedTab = firstId || "#tab-1";
+      const firstKey = $tabs.filter("#tab-1").length
+        ? "tab-1"
+        : ($tabs.first().attr("id") || "tab-1");
+
+      let lastClickedKey = firstKey;
       let hoverRevertTimer = null;
 
       // Preload images
@@ -37,50 +41,66 @@
         i.src = url;
       });
 
-      const targetFor = (tabId) =>
-        tabId === "#tab-1" ? $container.find(".power-state.is-1") : $container.find(".power-state.is-2");
+      const $state1 = $container.find(".power-state.is-1");
+      const $state2 = $container.find(".power-state.is-2");
 
-      function showState(tabId) {
-        if (!tabId || !$(tabId).length) tabId = firstId;
-
-        $container.find(".power-tab, .power-title, .power-text").removeClass("active");
-        const $tab = $container.find(tabId).addClass("active");
-        $tab.find(".power-title, .power-text").addClass("active");
-
-        const $target = targetFor(tabId);
-        $states.stop(true, true);
-        $states.not($target).hide();
-        $target.stop(true, true).fadeIn(180);
+      function getTabByKey(key) {
+        // strict scope: only inside this container
+        try {
+          return $tabs.filter("#" + CSS.escape(key)).first();
+        } catch (e) {
+          // fallback if CSS.escape not supported
+          return $tabs.filter("#" + key.replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, "\\$1")).first();
+        }
       }
 
+      function showStateByKey(key) {
+        const $tab = getTabByKey(key);
+        if (!$tab.length) key = firstKey;
+
+        // UI active
+        $container.find(".power-tab, .power-title, .power-text").removeClass("active");
+        const $activeTab = getTabByKey(key).addClass("active");
+        $activeTab.find(".power-title, .power-text").addClass("active");
+
+        // Visuals (no overlap)
+        $states.stop(true, true).hide();
+        if (key === "tab-1") $state1.stop(true, true).fadeIn(180);
+        else $state2.stop(true, true).fadeIn(180);
+      }
+
+      // Click
       $tabs.off(".tabsGlobal").on("click.tabsGlobal", function () {
-        const id = "#" + this.id;
-        lastClickedTab = id;
+        const key = this.id || firstKey;
+        lastClickedKey = key;
         clearTimeout(hoverRevertTimer);
-        showState(id);
+        showStateByKey(key);
       });
 
+      // Keyboard focus
       $tabs.off(".tabsGlobalFocus").on("focusin.tabsGlobalFocus", function () {
         clearTimeout(hoverRevertTimer);
-        showState("#" + this.id);
+        showStateByKey(this.id || firstKey);
       });
 
+      // When leaving container via tabbing, revert to last clicked
       $container.off(".tabsGlobalOut").on("focusout.tabsGlobalOut", function (e) {
         if (!$container[0].contains(e.relatedTarget)) {
           clearTimeout(hoverRevertTimer);
-          hoverRevertTimer = setTimeout(() => showState(lastClickedTab), 80);
+          hoverRevertTimer = setTimeout(() => showStateByKey(lastClickedKey), 80);
         }
       });
 
+      // Hover only desktop
       function bindHover(enable) {
         if (enable) {
           $tabs.off(".tabsGlobalHover").on("mouseenter.tabsGlobalHover", function () {
             clearTimeout(hoverRevertTimer);
-            showState("#" + this.id);
+            showStateByKey(this.id || firstKey);
           });
           $container.off(".tabsGlobalHoverLeave").on("mouseleave.tabsGlobalHoverLeave", function () {
             clearTimeout(hoverRevertTimer);
-            hoverRevertTimer = setTimeout(() => showState(lastClickedTab), 80);
+            hoverRevertTimer = setTimeout(() => showStateByKey(lastClickedKey), 80);
           });
         } else {
           $tabs.off(".tabsGlobalHover");
@@ -92,8 +112,9 @@
       bindHover(mq.matches);
       mq.addEventListener("change", (e) => bindHover(e.matches));
 
+      // Init
       $states.hide();
-      showState(lastClickedTab);
+      showStateByKey(lastClickedKey);
     });
   }
 
@@ -117,8 +138,7 @@
         if (!bar) return;
         bar.style.transition = "none";
         bar.style.transform = "scaleY(0)";
-        // reflow
-        bar.offsetHeight;
+        bar.offsetHeight; // reflow
       });
     }
 
