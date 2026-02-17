@@ -1,0 +1,7 @@
+.nav-drop-link.w-inline-block.w--current .navbar-drop-text {
+    color: #EF4A23  !important;
+}
+
+.splide__pagination.splide__pagination--ltr {
+    display:none !important;
+}
