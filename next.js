@@ -1,4 +1,3 @@
-
 (() => {
   // ---------------------------
   // Helpers
@@ -9,7 +8,7 @@
   };
 
   // ---------------------------
-  // 1) POWER TABS (global, excluding .section-hardware-engineered) — FIXED
+  // 1) POWER TABS (scoped per .power-container, excluding hardware engineered)
   // ---------------------------
   function initPowerTabsGlobal($) {
     const $containers = $(".power-container").filter(function () {
@@ -19,6 +18,8 @@
 
     $containers.each(function () {
       const $container = $(this);
+
+      // IMPORTANT: scope everything to THIS container
       const $tabs = $container.find(".power-tab");
       const $states = $container.find(".power-state");
       if (!$tabs.length || !$states.length) return;
@@ -30,7 +31,7 @@
       let lastClickedKey = firstKey;
       let hoverRevertTimer = null;
 
-      // Preload images
+      // Preload images in THIS container only
       $states.find("img, source").each(function () {
         const el = this;
         const src = el.currentSrc || el.src || el.getAttribute("srcset");
@@ -49,21 +50,19 @@
         try {
           return $tabs.filter("#" + CSS.escape(key)).first();
         } catch (e) {
-          // fallback if CSS.escape not supported
           return $tabs.filter("#" + key.replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, "\\$1")).first();
         }
       }
 
       function showStateByKey(key) {
-        const $tab = getTabByKey(key);
-        if (!$tab.length) key = firstKey;
+        if (!getTabByKey(key).length) key = firstKey;
 
-        // UI active
+        // Tabs UI (scoped)
         $container.find(".power-tab, .power-title, .power-text").removeClass("active");
         const $activeTab = getTabByKey(key).addClass("active");
         $activeTab.find(".power-title, .power-text").addClass("active");
 
-        // Visuals (no overlap)
+        // Visuals (scoped)
         $states.stop(true, true).hide();
         if (key === "tab-1") $state1.stop(true, true).fadeIn(180);
         else $state2.stop(true, true).fadeIn(180);
@@ -77,13 +76,13 @@
         showStateByKey(key);
       });
 
-      // Keyboard focus
+      // Focus keyboard
       $tabs.off(".tabsGlobalFocus").on("focusin.tabsGlobalFocus", function () {
         clearTimeout(hoverRevertTimer);
         showStateByKey(this.id || firstKey);
       });
 
-      // When leaving container via tabbing, revert to last clicked
+      // When leaving THIS container (tabbing out), revert
       $container.off(".tabsGlobalOut").on("focusout.tabsGlobalOut", function (e) {
         if (!$container[0].contains(e.relatedTarget)) {
           clearTimeout(hoverRevertTimer);
@@ -91,7 +90,7 @@
         }
       });
 
-      // Hover only desktop
+      // Hover desktop only (and reacts to resize)
       function bindHover(enable) {
         if (enable) {
           $tabs.off(".tabsGlobalHover").on("mouseenter.tabsGlobalHover", function () {
@@ -138,7 +137,7 @@
         if (!bar) return;
         bar.style.transition = "none";
         bar.style.transform = "scaleY(0)";
-        bar.offsetHeight; // reflow
+        bar.offsetHeight;
       });
     }
 
@@ -224,12 +223,11 @@
   }
 
   // ---------------------------
-  // 3) SPLIDE SLIDER
+  // 3) SPLIDE
   // ---------------------------
   function initSplide() {
     if (typeof window.Splide === "undefined") return;
-    const el = document.querySelector(".splide.is-certif");
-    if (!el) return;
+    if (!document.querySelector(".splide.is-certif")) return;
 
     const splide = new window.Splide(".splide.is-certif", {
       type: "slider",
@@ -256,7 +254,7 @@
   }
 
   // ---------------------------
-  // 4) FAQ ACCESSIBILITY (needs jQuery)
+  // 4) FAQ A11Y
   // ---------------------------
   function initFaqA11y($) {
     const $items = $(".faq-container_item");
@@ -285,7 +283,7 @@
   }
 
   // ---------------------------
-  // 5) HARDWARE ENGINEERED (isolated tabs only)
+  // 5) HARDWARE ENGINEERED (isolated tabs only) — as-is
   // ---------------------------
   function initHardwareEngineeredTabs($) {
     const $sections = $(".section-hardware-engineered");
@@ -298,17 +296,15 @@
       const $states = $root.find(".power-state");
       const $state1 = $root.find(".power-state.is-1");
       const $state2 = $root.find(".power-state.is-2");
-
       if (!$tabs.length || !$container.length || !$states.length) return;
 
-      const firstId = $tabs.filter("#tab-1").length ? "#tab-1" : "#" + ($tabs.first().attr("id") || "");
+      const firstId = $tabs.filter("#tab-1").length ? "#tab-1" : ("#" + ($tabs.first().attr("id") || ""));
       let lastClickedTab = firstId || "#tab-1";
       let hoverRevertTimer = null;
       let hoverBound = false;
 
       function showStateById(id) {
         if (!id || !$root.find(id).length) id = firstId;
-
         $root.find(".power-tab, .power-title, .power-text").removeClass("active");
         const $tab = $root.find(id);
         $tab.addClass("active");
@@ -323,19 +319,19 @@
         if (!$root.find(".power-tab.active").length) showStateById(lastClickedTab || firstId);
       }
 
-      $tabs.off(".engineered").on("click.engineered", function () {
+      $tabs.on("click.engineered", function () {
         const id = "#" + this.id;
         lastClickedTab = id;
         clearTimeout(hoverRevertTimer);
         showStateById(id);
       });
 
-      $tabs.off(".engineeredFocus").on("focusin.engineeredFocus", function () {
+      $tabs.on("focusin.engineered", function () {
         clearTimeout(hoverRevertTimer);
         showStateById("#" + this.id);
       });
 
-      $container.off(".engineeredOut").on("focusout.engineeredOut", function (e) {
+      $container.on("focusout.engineered", function (e) {
         if (!$container[0].contains(e.relatedTarget)) {
           clearTimeout(hoverRevertTimer);
           hoverRevertTimer = setTimeout(() => showStateById(lastClickedTab), 80);
@@ -373,7 +369,7 @@
   }
 
   // ---------------------------
-  // 6) HARDWARE VIDEO (autoplay muted + user Mute/Unmute)
+  // 6) HARDWARE VIDEO — keep ONE script only (muted autoplay + mute/unmute)
   // ---------------------------
   function initHardwareVideos($) {
     const $wraps = $(".hardware-video_wrapper");
@@ -381,7 +377,6 @@
 
     $wraps.each(function (i) {
       const tag = `nv-video[${i + 1}]`;
-
       const $wrap = $(this);
       const $video = $wrap.find("video.nv-video");
       if (!$video.length) return;
@@ -400,7 +395,7 @@
       video.setAttribute("webkit-playsinline", "");
       video.autoplay = false;
 
-      // Start muted for reliable autoplay
+      // Start muted
       video.muted = true;
       video.setAttribute("muted", "");
 
@@ -409,7 +404,6 @@
       $playText.text("Unmute");
       $pauseText.text("Mute");
 
-      // Icons (optional)
       try {
         $playIcon.html(
           '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">' +
