@@ -1,0 +1,6 @@
+.navbar-menu .nav-drop-link.w-inline-block.w--current {
+    background-color: red;
+}
+.splide__pagination.splide__pagination--ltr {
+    display:none !important;
+}
