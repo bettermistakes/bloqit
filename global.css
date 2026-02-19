@@ -1,0 +1,16 @@
+
+.splide__sr {
+  display:none !important;
+  opacity:0 !important;
+  position:absolute !important;
+}
+
+/* Navbar Active Link */
+.navbar-link.w--current {
+    color: #EF4A23 !important;
+    transition: color 0.25s ease !important;
+}
+
+.nav-drop-link.w-inline-block.w--current .heading-xxsmall.is-navbar {
+  color: #EF4A23 !important;
+}
