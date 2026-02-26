@@ -4,10 +4,10 @@
     if (!window.Splide || !el) return;
 
     new Splide(el, {
-      type: "loop",
+      type: "slider",
       perPage: 3,
       perMove: 1,
-      focus: "center",
+      focus: "left",
       speed: 500,
       drag: false,
       gap: "4rem",
