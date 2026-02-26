@@ -26,3 +26,45 @@
     }).mount();
   } catch (e) {}
 })();
+
+
+
+// End date
+const countdownDate = new Date("March 17, 2026 09:00:00").getTime();
+
+const elDays  = document.getElementById("timer-days");
+const elHours = document.getElementById("timer-hours");
+const elMin   = document.getElementById("timer-min");
+const elSec   = document.getElementById("timer-seconds");
+
+// Optional (only if they exist)
+const heading     = document.getElementById("heading-timer");
+const timerParent = document.getElementById("timer-parent");
+
+function updateTimer() {
+  const now = Date.now();
+  const distance = countdownDate - now;
+
+  if (distance < 0) {
+    if (heading) heading.textContent = "The event has started!";
+    if (timerParent) timerParent.style.display = "none";
+    if (elDays)  elDays.textContent  = "00";
+    if (elHours) elHours.textContent = "00";
+    if (elMin)   elMin.textContent   = "00";
+    if (elSec)   elSec.textContent   = "00";
+    return;
+  }
+
+  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((distance / (1000 * 60)) % 60);
+  const seconds = Math.floor((distance / 1000) % 60);
+
+  if (elDays)  elDays.textContent  = String(days).padStart(2, "0");
+  if (elHours) elHours.textContent = String(hours).padStart(2, "0");
+  if (elMin)   elMin.textContent   = String(minutes).padStart(2, "0");
+  if (elSec)   elSec.textContent   = String(seconds).padStart(2, "0");
+}
+
+updateTimer();
+setInterval(updateTimer, 1000);
