@@ -29,15 +29,16 @@
 
 
 
-// End date
-const countdownDate = new Date("March 17, 2026 09:00:00").getTime();
+// Target date: March 17, 2026 at 09:10 AM CET (UTC+1)
+// CET = UTC+1 → so 09:10 CET = 08:10 UTC
+
+const countdownDate = new Date(Date.UTC(2026, 2, 17, 8, 10, 0)).getTime();
 
 const elDays  = document.getElementById("timer-days");
 const elHours = document.getElementById("timer-hours");
 const elMin   = document.getElementById("timer-min");
 const elSec   = document.getElementById("timer-seconds");
 
-// Optional (only if they exist)
 const heading     = document.getElementById("heading-timer");
 const timerParent = document.getElementById("timer-parent");
 
