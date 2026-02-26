@@ -7,7 +7,7 @@
       type: "loop",
       perPage: 3,
       perMove: 1,
-      focus: "left",
+      focus: "center",
       speed: 500,
       drag: false,
       gap: "4rem",
@@ -17,7 +17,7 @@
       pauseOnHover: true,
       keyboard: true,
       rewind: false,
-      pagination: true,
+      pagination: false,
       reducedMotion: { speed: 0, rewindSpeed: 0 },
       breakpoints: {
         991: { perPage: 1, gap: "1rem" },
