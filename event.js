@@ -29,14 +29,16 @@
 
 
 // Target date: March 17, 2026 at 09:00 AM GMT+1
-const countdownDate = new Date("2026-03-17T09:00:00+01:00").getTime();
+// Adjusted +1 hour → 09:00 UTC instead of 08:00 UTC
 
-const elDays  = document.getElementById("timer-days");
+const countdownDate = new Date(Date.UTC(2026, 2, 17, 9, 0, 0)).getTime();
+
+const elDays = document.getElementById("timer-days");
 const elHours = document.getElementById("timer-hours");
-const elMin   = document.getElementById("timer-min");
-const elSec   = document.getElementById("timer-seconds");
+const elMin = document.getElementById("timer-min");
+const elSec = document.getElementById("timer-seconds");
 
-const heading     = document.getElementById("heading-timer");
+const heading = document.getElementById("heading-timer");
 const timerParent = document.getElementById("timer-parent");
 
 function updateTimer() {
@@ -46,10 +48,10 @@ function updateTimer() {
   if (distance < 0) {
     if (heading) heading.textContent = "The event has started!";
     if (timerParent) timerParent.style.display = "none";
-    if (elDays)  elDays.textContent  = "00";
+    if (elDays) elDays.textContent = "00";
     if (elHours) elHours.textContent = "00";
-    if (elMin)   elMin.textContent   = "00";
-    if (elSec)   elSec.textContent   = "00";
+    if (elMin) elMin.textContent = "00";
+    if (elSec) elSec.textContent = "00";
     return;
   }
 
@@ -58,10 +60,10 @@ function updateTimer() {
   const minutes = Math.floor((distance / (1000 * 60)) % 60);
   const seconds = Math.floor((distance / 1000) % 60);
 
-  if (elDays)  elDays.textContent  = String(days).padStart(2, "0");
+  if (elDays) elDays.textContent = String(days).padStart(2, "0");
   if (elHours) elHours.textContent = String(hours).padStart(2, "0");
-  if (elMin)   elMin.textContent   = String(minutes).padStart(2, "0");
-  if (elSec)   elSec.textContent   = String(seconds).padStart(2, "0");
+  if (elMin) elMin.textContent = String(minutes).padStart(2, "0");
+  if (elSec) elSec.textContent = String(seconds).padStart(2, "0");
 }
 
 updateTimer();
