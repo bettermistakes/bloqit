@@ -29,9 +29,7 @@
 
 
 // Target date: March 17, 2026 at 09:00 AM GMT+1
-// GMT+1 = UTC+1 → so 09:00 GMT+1 = 08:00 UTC
-
-const countdownDate = new Date(Date.UTC(2026, 2, 17, 8, 0, 0)).getTime();
+const countdownDate = new Date("2026-03-17T09:00:00+01:00").getTime();
 
 const elDays  = document.getElementById("timer-days");
 const elHours = document.getElementById("timer-hours");
